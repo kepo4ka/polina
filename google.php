@@ -2,31 +2,45 @@
 include 'includes/php_query.php';
 set_time_limit(0);
 
-$result_array = csv2array('products.csv');
+$result_array = csv2array('sample_products1.csv');
+
+$name_index =3;
+$url_index = 28;
 
 //Глубина парсинга. Число кратное 20.
 $count = 1;
 
-
+$k = false;
 foreach ($result_array as &$item) {
+
+    if (!$k) {
+        $k = true;
+        continue;
+    }
     $temp_item = array();
 
-    $item[1] = windows2utf(trim($item[1]));
+    $item[$name_index] = windows2utf(trim($item[$name_index]));
 
-    $html = google($item[1]);
+    $html = google($item[$name_index]);
 
     $pq = phpQuery::newDocument($html);
     $images = $pq->find(".images_table img']");
-    $temp_item['name'] = $item[1];
+    $temp_item['name'] = $item[$name_index];
     $temp_item['url'] = $images[0]->attr('src');
-    $item[5] = $temp_item;
+    $item[$url_index] = $temp_item;
 }
 
+$k = false;
 foreach ($result_array as &$item) {
-    $content = file_get_contents($item[5]['url']);
-    $item[5]['name'] = utf2windows($item[5]['name']);
-    file_put_contents('google/' . $item[5]['name'] . '.jpg', $content);
-    $item[5] = $item[5]['name'] . '.jpg';
+    if (!$k) {
+        $k = true;
+        continue;
+    }
+
+    $content = file_get_contents($item[$url_index]['url']);
+    $item[$url_index]['name'] = utf2windows($item[$url_index]['name']);
+    file_put_contents('google/' . $item[$url_index]['name'] . '.jpg', $content);
+    $item[$url_index] = $item[$url_index]['url'];
 }
 
 
@@ -114,6 +128,7 @@ function google($query)
 
 function array2csv(array &$array)
 {
+    global $name_index;
 
     if (count($array) == 0) {
         return null;
@@ -122,8 +137,8 @@ function array2csv(array &$array)
     $df = fopen("php://output", 'w');
 //   fputcsv($df, array_keys(reset($array)), ';');
     foreach ($array as $row) {
-        $row[1] = utf2windows($row[1]);
-        fputcsv($df, $row, ';');
+        $row[$name_index] = utf2windows($row[$name_index]);
+        fputcsv($df, $row, ',');
     }
     fclose($df);
     return ob_get_clean();
@@ -132,12 +147,13 @@ function array2csv(array &$array)
 
 function csv2array($fileName)
 {
+    global $name_index;
     $csvData = file_get_contents($fileName);
     $lines = explode("\n", $csvData);
     $array = array();
     foreach ($lines as $line) {
         $temp = str_getcsv($line, ';');
-        if (!empty($temp[1])) {
+        if (!empty($temp[$name_index])) {
             $array[] = $temp;
         }
     }

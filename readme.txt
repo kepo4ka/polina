@@ -1,0 +1,1 @@
+https://github.com/woocommerce/woocommerce/tree/master/sample-data

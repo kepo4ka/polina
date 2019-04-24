@@ -2,13 +2,39 @@
 include 'includes/php_query.php';
 set_time_limit(0);
 
-$result_array = csv2array('sample_products1.csv');
 
-$name_index =3;
+$name_index = 3;
 $url_index = 28;
-
+$file_name = 'sample_products.csv';
+$delim = ",";
+$translit = 2;
 //Глубина парсинга. Число кратное 20.
 $count = 1;
+
+
+if (!empty($_REQUEST['file_name'])) {
+    $file_name = $_REQUEST['file_name'];
+}
+
+if (!empty($_REQUEST['delim'])) {
+    $delim = $_REQUEST['delim'];
+}
+
+if (!empty($_REQUEST['translit'])) {
+    $translit = (int) $_REQUEST['translit'];
+}
+
+if (!empty($_REQUEST['name_index'])) {
+    $name_index = (int)$name_index;
+}
+
+if (!empty($_REQUEST['url_index'])) {
+    $url_index = (int)$url_index;
+}
+
+
+$result_array = csv2array($file_name);
+
 
 $k = false;
 foreach ($result_array as &$item) {
@@ -20,6 +46,7 @@ foreach ($result_array as &$item) {
     $temp_item = array();
 
     $item[$name_index] = windows2utf(trim($item[$name_index]));
+
 
     $html = google($item[$name_index]);
 
@@ -41,6 +68,7 @@ foreach ($result_array as &$item) {
     $item[$url_index]['name'] = utf2windows($item[$url_index]['name']);
     file_put_contents('google/' . $item[$url_index]['name'] . '.jpg', $content);
     $item[$url_index] = $item[$url_index]['url'];
+    $item[$translit] = mb_strtolower(rus2translit($item[$name_index]));
 }
 
 
@@ -81,6 +109,7 @@ function rus2translit($string)
         'Ч' => 'Ch', 'Ш' => 'Sh', 'Щ' => 'Sch',
         'Ь' => '\'', 'Ы' => 'Y', 'Ъ' => '\'',
         'Э' => 'E', 'Ю' => 'Yu', 'Я' => 'Ya',
+        ' ' => '-'
     );
     return strtr($string, $converter);
 }
@@ -128,7 +157,7 @@ function google($query)
 
 function array2csv(array &$array)
 {
-    global $name_index;
+    global $name_index, $delim;
 
     if (count($array) == 0) {
         return null;
@@ -138,7 +167,7 @@ function array2csv(array &$array)
 //   fputcsv($df, array_keys(reset($array)), ';');
     foreach ($array as $row) {
         $row[$name_index] = utf2windows($row[$name_index]);
-        fputcsv($df, $row, ',');
+        fputcsv($df, $row, $delim);
     }
     fclose($df);
     return ob_get_clean();

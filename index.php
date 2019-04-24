@@ -173,6 +173,10 @@
         <fieldset>
             <input placeholder="Разделитель: , или ;" type="text" name="delim" tabindex="3" required value=",">
         </fieldset>
+
+        <fieldset>
+            <input placeholder="Папка для картинок" type="text" name="img_folder" tabindex="3" required value="http://barsikgroup.ru/wp-content/uploads/">
+        </fieldset>
         <fieldset>
             <button name="submit" type="submit" id="contact-submit" data-submit="...Sending">Обновить</button>
         </fieldset>

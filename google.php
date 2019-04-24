@@ -6,11 +6,11 @@ set_time_limit(0);
 $name_index = 3;
 $url_index = 28;
 $file_name = 'sample_products.csv';
+$wp_folder = 'http://barsikgroup.ru/wp-content/uploads/';
 $delim = ",";
 $translit = 2;
 //Глубина парсинга. Число кратное 20.
 $count = 1;
-
 
 if (!empty($_REQUEST['file_name'])) {
     $file_name = $_REQUEST['file_name'];
@@ -20,8 +20,12 @@ if (!empty($_REQUEST['delim'])) {
     $delim = $_REQUEST['delim'];
 }
 
+if (!empty($_REQUEST['img_folder'])) {
+    $wp_folder = $_REQUEST['img_folder'];
+}
+
 if (!empty($_REQUEST['translit'])) {
-    $translit = (int) $_REQUEST['translit'];
+    $translit = (int)$_REQUEST['translit'];
 }
 
 if (!empty($_REQUEST['name_index'])) {
@@ -32,9 +36,8 @@ if (!empty($_REQUEST['url_index'])) {
     $url_index = (int)$url_index;
 }
 
-
+$wp_folder .= date('Y') . "/" . date('m') . "/";
 $result_array = csv2array($file_name);
-
 
 $k = false;
 foreach ($result_array as &$item) {
@@ -46,7 +49,6 @@ foreach ($result_array as &$item) {
     $temp_item = array();
 
     $item[$name_index] = windows2utf(trim($item[$name_index]));
-
 
     $html = google($item[$name_index]);
 
@@ -64,11 +66,16 @@ foreach ($result_array as &$item) {
         continue;
     }
 
-    $content = file_get_contents($item[$url_index]['url']);
     $item[$url_index]['name'] = utf2windows($item[$url_index]['name']);
-    file_put_contents('google/' . $item[$url_index]['name'] . '.jpg', $content);
-    $item[$url_index] = $item[$url_index]['url'];
     $item[$translit] = mb_strtolower(rus2translit($item[$name_index]));
+    $item[$translit] = preg_replace("/[--__\d]{2,}/", '-', $item[$translit]);
+
+    $content = file_get_contents($item[$url_index]['url']);
+
+    $item[$url_index] = $wp_folder . $item[$translit] . '.jpg';
+
+    file_put_contents('google/' . $item[$translit] . '.jpg', $content);
+
 }
 
 
